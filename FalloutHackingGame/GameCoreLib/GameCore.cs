@@ -12,11 +12,16 @@ namespace GameCoreLib
 
 		static GameCoreFactory()
 		{
-			using (var reader = new StreamReader("enable1.txt"))
+			allWords = new Dictionary<int, List<string>>();
+			using (var reader = new StreamReader(@"C:\Users\mcmsp_000\Documents\GitHub\DailyProgrammer\FalloutHackingGame\GameCoreLib\enable1.txt"))
 			{
 				string line;
 				while ((line = reader.ReadLine()) != null)
 				{
+					if (!allWords.ContainsKey(line.Length))
+					{
+						allWords[line.Length] = new List<string>();
+					}
 					allWords[line.Length].Add(line);
 				}
 			}
@@ -24,17 +29,31 @@ namespace GameCoreLib
 
 		public static GameCore GetInstance(int difficulty)
 		{
-			var numWords = 5 + 5 * difficulty;
-			var wordLength = 6 + difficulty;
+			var numWords = 5 * difficulty;
+			var wordLength = 5 + difficulty;
 
 			var gameWords = new List<string>();
-			var possibleWords = allWords[wordLength];
-			while (gameWords.Count < numWords)
+
+			if (wordLength <= 10)
 			{
-				var possibleWord = possibleWords[rand.Next(possibleWords.Count)];
-				if (!gameWords.Contains(possibleWord))
+				var possibleWords = allWords[wordLength];
+				while (gameWords.Count < numWords)
 				{
-					gameWords.Add(possibleWord);
+					var possibleWord = possibleWords[rand.Next(possibleWords.Count)];
+					if (!gameWords.Contains(possibleWord))
+					{
+						gameWords.Add(possibleWord);
+					}
+				}
+			}
+			else
+			{
+				var possibleWords = new List<string>(allWords[wordLength]);
+				for (var i = 0; i < numWords; i++)
+				{
+					var wordIndex = rand.Next(possibleWords.Count);
+					gameWords.Add(possibleWords[wordIndex]);
+					possibleWords.RemoveAt(wordIndex);
 				}
 			}
 
@@ -44,6 +63,7 @@ namespace GameCoreLib
 
 	public class GameCore
 	{
+		private string correctWord;
 
 		public List<string> GameWords { get; private set; }
 		public int GuessesLeft { get; private set; }
@@ -54,14 +74,17 @@ namespace GameCoreLib
 			{
 				if (IsWon || GuessesLeft == 0)
 				{
-					return CorrectWord;
+					return correctWord;
 				}
 				else
 				{
 					throw new InvalidOperationException("CHEATER!!!!!");
 				}
 			}
-			private set;
+			private set
+			{
+				correctWord = value;
+			}
 		}
 
 		internal GameCore(List<string> gameWords, string correctWord)
@@ -74,9 +97,9 @@ namespace GameCoreLib
 
 		public int Guess(string guess)
 		{
-			var numCorrect = guess.Zip(CorrectWord, (gl, cl) => gl == cl ? 1 : 0).Sum();
+			var numCorrect = guess.Zip(correctWord, (gl, cl) => gl == cl ? 1 : 0).Sum();
 			GuessesLeft--;
-			IsWon = numCorrect == CorrectWord.Length;
+			IsWon = numCorrect == correctWord.Length;
 			return numCorrect;
 		}
 	}
