@@ -5,8 +5,8 @@ result = if r < 0
     else
         nums = n.chars.map.with_index do |c, i|
             j = n.length - i - 1
-            if j % 2 != 0
-                r ** (j + 1) - (r - c.to_i) * r ** j
+            if j % 2 != 0 && c.to_i != 0
+                r ** (j + 1) + (r - c.to_i) * r ** j
             else
                 c.to_i * r ** j
             end
